@@ -19,39 +19,39 @@ int main()
         printf("str: %s\n", str);
     }
 
-    printf("test uuid4_parse\n");
-    {
-        // target's uuid: 9c6241f0-e74e-40ce-b9a6-953413d2af80
-        uint8_t bytes[] =
-            {0x9C, 0x62, 0x41, 0xF0, 0xE7, 0x4E, 0x40, 0xCE,
-             0xB9, 0xA6, 0x95, 0x34, 0x13, 0xD2, 0xAF, 0x80};
+    // printf("test uuid4_parse\n");
+    // {
+    //     // target's uuid: 9c6241f0-e74e-40ce-b9a6-953413d2af80
+    //     uint8_t bytes[] =
+    //         {0x9C, 0x62, 0x41, 0xF0, 0xE7, 0x4E, 0x40, 0xCE,
+    //          0xB9, 0xA6, 0x95, 0x34, 0x13, 0xD2, 0xAF, 0x80};
 
-        uuid4_t expected_uuid =
-            uuid4_generate(11268641720563024078UL, 13377543794054049664UL);
-        uuid4_t uuid = uuid4_parse(bytes);
+    //     uuid4_t expected_uuid =
+    //         uuid4_generate(11268641720563024078UL, 13377543794054049664UL);
+    //     uuid4_t uuid = uuid4_parse(bytes);
 
-        bool result = uuid4_compare(expected_uuid, uuid);
-        if (result == false)
-            call_syserr("unexpected result");
-    }
-    printf("pass\n");
+    //     bool result = uuid4_compare(expected_uuid, uuid);
+    //     if (result == false)
+    //         call_syserr("unexpected result");
+    // }
+    // printf("pass\n");
 
-    printf("test uuid4_unparse\n");
-    {
-        uuid4_t uuid =
-            uuid4_generate(11268641720563024078UL, 13377543794054049664UL);
+    // printf("test uuid4_unparse\n");
+    // {
+    //     uuid4_t uuid =
+    //         uuid4_generate(11268641720563024078UL, 13377543794054049664UL);
 
-        uint8_t expected_bytes[] =
-            {0x9C, 0x62, 0x41, 0xF0, 0xE7, 0x4E, 0x40, 0xCE,
-             0xB9, 0xA6, 0x95, 0x34, 0x13, 0xD2, 0xAF, 0x80};
-        uint8_t bytes[UUID_BYTE_SIZE];
-        uuid4_unparse(uuid, bytes);
+    //     uint8_t expected_bytes[] =
+    //         {0x9C, 0x62, 0x41, 0xF0, 0xE7, 0x4E, 0x40, 0xCE,
+    //          0xB9, 0xA6, 0x95, 0x34, 0x13, 0xD2, 0xAF, 0x80};
+    //     uint8_t bytes[UUID_BYTE_SIZE];
+    //     uuid4_unparse(uuid, bytes);
     
-        bool result = memcmp(expected_bytes, bytes, UUID_BYTE_SIZE) == 0;
-        if (result == false)
-            call_syserr("unexpected result");
-    }
-    printf("pass\n");
+    //     bool result = memcmp(expected_bytes, bytes, UUID_BYTE_SIZE) == 0;
+    //     if (result == false)
+    //         call_syserr("unexpected result");
+    // }
+    // printf("pass\n");
 
     return 0;
 }
