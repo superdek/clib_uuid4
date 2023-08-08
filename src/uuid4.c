@@ -97,70 +97,63 @@ uuid4_t uuid4_copy(uuid4_t self)
     return uuid;
 }
 
-// uuid4_t uuid4_parse(uint8_t *bytes)
-// {
-//     if (bytes == NULL)
-//         call_nullarg();
+uuid4_t uuid4_parse(uint8_t *bytes)
+{
+    if (bytes == NULL)
+        call_nullarg();
 
-//     uint64_t most =
-//         ((uint64_t)bytes[0] << 56) |
-//         ((uint64_t)bytes[1] << 48) |
-//         ((uint64_t)bytes[2] << 40) |
-//         ((uint64_t)bytes[3] << 32) |
-//         ((uint64_t)bytes[4] << 24) |
-//         ((uint64_t)bytes[5] << 16) |
-//         ((uint64_t)bytes[6] << 8) |
-//         ((uint64_t)bytes[7]);
-//     uint64_t least =
-//         ((uint64_t)bytes[8] << 56) |
-//         ((uint64_t)bytes[9] << 48) |
-//         ((uint64_t)bytes[10] << 40) |
-//         ((uint64_t)bytes[11] << 32) |
-//         ((uint64_t)bytes[12] << 24) |
-//         ((uint64_t)bytes[13] << 16) |
-//         ((uint64_t)bytes[14] << 8) |
-//         ((uint64_t)bytes[15]);
+    uint64_t most =
+        ((uint64_t)bytes[0] << 56) |
+        ((uint64_t)bytes[1] << 48) |
+        ((uint64_t)bytes[2] << 40) |
+        ((uint64_t)bytes[3] << 32) |
+        ((uint64_t)bytes[4] << 24) |
+        ((uint64_t)bytes[5] << 16) |
+        ((uint64_t)bytes[6] << 8) |
+        ((uint64_t)bytes[7]);
+    uint64_t least =
+        ((uint64_t)bytes[8] << 56) |
+        ((uint64_t)bytes[9] << 48) |
+        ((uint64_t)bytes[10] << 40) |
+        ((uint64_t)bytes[11] << 32) |
+        ((uint64_t)bytes[12] << 24) |
+        ((uint64_t)bytes[13] << 16) |
+        ((uint64_t)bytes[14] << 8) |
+        ((uint64_t)bytes[15]);
 
-//     uint64_t version = (most & 0x000000000000F000) >> 12;
-//     // printf("version: %lu\n", version);
-//     if (version != 4)
-//         call_syserr("invalid version");
+    _check(most, least);
 
-//     uint64_t variant = (least & 0xF000000000000000) >> 60;
-//     if (variant < 0x8 || 0xB < variant)
-//         call_syserr("invalid variant");
+    uuid4_t uuid = {most, least};
+    return uuid;
+}
 
-//     uuid4_t uuid = {most, least};
-//     return uuid;
-// }
+void uuid4_unparse(uuid4_t self, uint8_t *bytes)
+{
+    if (bytes == NULL)
+        call_nullarg();
 
-// void uuid4_unparse(uuid4_t self, uint8_t *bytes)
-// {
-//     if (bytes == NULL)
-//         call_nullarg();
+    uint64_t most = self.most;
+    bytes[0] = (uint8_t)((most >> 56) & 0xFF);
+    bytes[1] = (uint8_t)((most >> 48) & 0xFF);
+    bytes[2] = (uint8_t)((most >> 40) & 0xFF);
+    bytes[3] = (uint8_t)((most >> 32) & 0xFF);
+    bytes[4] = (uint8_t)((most >> 24) & 0xFF);
+    bytes[5] = (uint8_t)((most >> 16) & 0xFF);
+    bytes[6] = (uint8_t)((most >> 8) & 0xFF);
+    bytes[7] = (uint8_t)(most & 0xFF);
 
-//     uint64_t most = self.most;
-//     bytes[0] = (uint8_t)((most >> 56) & 0xFF);
-//     bytes[1] = (uint8_t)((most >> 48) & 0xFF);
-//     bytes[2] = (uint8_t)((most >> 40) & 0xFF);
-//     bytes[3] = (uint8_t)((most >> 32) & 0xFF);
-//     bytes[4] = (uint8_t)((most >> 24) & 0xFF);
-//     bytes[5] = (uint8_t)((most >> 16) & 0xFF);
-//     bytes[6] = (uint8_t)((most >> 8) & 0xFF);
-//     bytes[7] = (uint8_t)(most & 0xFF);
+    uint64_t least = self.least;
+    bytes[8] = (uint8_t)((least >> 56) & 0xFF);
+    bytes[9] = (uint8_t)((least >> 48) & 0xFF);
+    bytes[10] = (uint8_t)((least >> 40) & 0xFF);
+    bytes[11] = (uint8_t)((least >> 32) & 0xFF);
+    bytes[12] = (uint8_t)((least >> 24) & 0xFF);
+    bytes[13] = (uint8_t)((least >> 16) & 0xFF);
+    bytes[14] = (uint8_t)((least >> 8) & 0xFF);
+    bytes[15] = (uint8_t)(least & 0xFF);
 
-//     uint64_t least = self.least;
-//     bytes[8] = (uint8_t)((least >> 56) & 0xFF);
-//     bytes[9] = (uint8_t)((least >> 48) & 0xFF);
-//     bytes[10] = (uint8_t)((least >> 40) & 0xFF);
-//     bytes[11] = (uint8_t)((least >> 32) & 0xFF);
-//     bytes[12] = (uint8_t)((least >> 24) & 0xFF);
-//     bytes[13] = (uint8_t)((least >> 16) & 0xFF);
-//     bytes[14] = (uint8_t)((least >> 8) & 0xFF);
-//     bytes[15] = (uint8_t)(least & 0xFF);
-
-//     return;
-// }
+    return;
+}
 
 void uuid4_to_string(uuid4_t self, char str[37])
 {

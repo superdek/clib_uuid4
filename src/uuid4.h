@@ -19,6 +19,10 @@ uuid4_t uuid4_generate_rand(void);
 
 uuid4_t uuid4_copy(uuid4_t self);
 
+uuid4_t uuid4_parse(uint8_t *bytes);
+
+void uuid4_unparse(uuid4_t self, uint8_t *bytes);
+
 void uuid4_to_string(uuid4_t self, char str[37]);
 
 #endif
