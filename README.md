@@ -15,10 +15,10 @@
 
 ## System Errors
 
-## External Libraries
-* [syserr](https://github.com/superdek/clib_syserr): 2
+## Libraries
+* [utils](https://github.com/superdek/clib_utils): 2
 
-## Dev External Libraries
+## Dev Libraries
 * [tester](https://github.com/superdek/clib_tester): 2
 
 

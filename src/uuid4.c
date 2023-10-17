@@ -1,37 +1,55 @@
+#include <assert.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
-#include <stdbool.h>
-#include <syserr.h>
+#include <utils.h>
 
-#include "uuid4.h"
+#include <uuid4.h>
 
-static void __attribute__((constructor)) constructor(void)
+__attribute__((constructor))
+static void constructor(void)
 {
     srand(time(NULL));
-
     return;
 }
 
-static void __attribute__((destructor)) destructor(void)
+/*
+ * most: a number that specifies the left half of the UUID
+ * least: a number that specifies the right half of the UUID
+ */
+static inline void _check(uint64_t most, uint64_t least)
 {
-    return;
-}
+    assert(most != 0 || least != 0);
 
-static inline bool _is_nil(uint64_t most, uint64_t least)
-{
-    return most == 0 && least == 0;
+    uint64_t version = (most & 0x000000000000F000) >> 12;
+    // printf("version: %lu\n", version);
+    assert(version == 4);
+
+    uint64_t variant = (least & 0xF000000000000000) >> 60;
+    assert(0x8 <= variant && variant <= 0xB);
+
+    return;
 }
 
 bool uuid4_is_nil(uuid4_t self)
 {
-    return _is_nil(self.most, self.least);
+    assert(self != NULL);
+    
+    _check(*(self + 0), *(self + 1));
+
+    return *(self + 0) == 0 && *(self + 1) == 0;
 }
 
-bool uuid4_compare(uuid4_t self, uuid4_t target)
+bool uuid4_compare(uuid4_t self, uuid4_t target_uuid)
 {
-    return self.most == target.most && self.least == target.least;
+    assert(self != NULL);
+    assert(target_uuid != NULL);
+
+    _check(*(self + 0), *(self + 1));
+
+    return *(self + 0) == *(target_uuid + 0) && 
+        *(self + 1) == *(target_uuid + 1);
 }
 
 // uint64_t uuid4_get_varint(uuid4_t self)
@@ -39,130 +57,53 @@ bool uuid4_compare(uuid4_t self, uuid4_t target)
 
 // }
 
-static inline void _check(uint64_t most, uint64_t least)
+static inline uuid4_t _create(uint64_t most, uint64_t least)
 {
-    if (_is_nil(most, least) == true)
-        call_syserr("uuid is nil");
+    uuid4_t uuid = (uuid4_t)memory_alloc(sizeof(uint64_t) * 2);
+    *(uuid + 0) = most;
+    *(uuid + 1) = least;
 
-    uint64_t version = (most & 0x000000000000F000) >> 12;
-    // printf("version: %lu\n", version);
-    if (version != 4)
-        call_syserr("invalid version");
-
-    uint64_t variant = (least & 0xF000000000000000) >> 60;
-    if (variant < 0x8 || 0xB < variant)
-        call_syserr("invalid variant");
-
-    return;
-}
-
-uuid4_t uuid4_generate(uint64_t most, uint64_t least)
-{
-    _check(most, least);
-
-    uuid4_t uuid = {most, least};
     return uuid;
 }
 
-static inline uuid4_t _fit(uint64_t most, uint64_t least)
+uuid4_t uuid4_create(uint64_t most, uint64_t least)
 {
+    _check(most, least);
+
+    return _create(most, least);
+}
+
+uuid4_t uuid4_generate(void)
+{
+    uint64_t most = ((uint64_t)rand() << 32) | (uint64_t)rand();
+    uint64_t least = ((uint64_t)rand() << 32) | (uint64_t)rand();
+
     most &= 0xFFFFFFFFFFFF4FFF;
     most |= 0x0000000000004000;
     least &= 0xBFFFFFFFFFFFFFFF;
     least |= 0x8000000000000000;
 
-    uuid4_t uuid = {most, least};
-    return uuid;
-}
-
-uuid4_t uuid4_generate_rand(void)
-{
-    uint64_t rand_num1 = (uint64_t)rand();
-    uint64_t rand_num2 = (uint64_t)rand();
-    uint64_t rand_num3 = (uint64_t)rand();
-    uint64_t rand_num4 = (uint64_t)rand();
-
-    uint64_t most = (rand_num1 << 32) | rand_num2;
-    uint64_t least = (rand_num3 << 32) | rand_num4;
-
-    return _fit(most, least);
+    return _create(most, least);
 }
 
 uuid4_t uuid4_copy(uuid4_t self)
 {
-    uint64_t most = self.most, least = self.least;
-    _check(most, least);
+    assert(self != NULL);
 
-    uuid4_t uuid = {most, least};
-    return uuid;
+    _check(*(self + 0), *(self + 1));
+
+    return _create(*(self + 0), *(self + 1));
 }
 
-uuid4_t uuid4_parse(uint8_t *bytes)
+char *uuid4_to_string(uuid4_t self)
 {
-    if (bytes == NULL)
-        call_nullarg();
+    assert(self != NULL);
 
-    uint64_t most =
-        ((uint64_t)bytes[0] << 56) |
-        ((uint64_t)bytes[1] << 48) |
-        ((uint64_t)bytes[2] << 40) |
-        ((uint64_t)bytes[3] << 32) |
-        ((uint64_t)bytes[4] << 24) |
-        ((uint64_t)bytes[5] << 16) |
-        ((uint64_t)bytes[6] << 8) |
-        ((uint64_t)bytes[7]);
-    uint64_t least =
-        ((uint64_t)bytes[8] << 56) |
-        ((uint64_t)bytes[9] << 48) |
-        ((uint64_t)bytes[10] << 40) |
-        ((uint64_t)bytes[11] << 32) |
-        ((uint64_t)bytes[12] << 24) |
-        ((uint64_t)bytes[13] << 16) |
-        ((uint64_t)bytes[14] << 8) |
-        ((uint64_t)bytes[15]);
+    _check(*(self + 0), *(self + 1));
 
-    _check(most, least);
+    char *str = (char *)memory_alloc(37);
 
-    uuid4_t uuid = {most, least};
-    return uuid;
-}
-
-void uuid4_unparse(uuid4_t self, uint8_t *bytes)
-{
-    if (bytes == NULL)
-        call_nullarg();
-
-    uint64_t most = self.most;
-    bytes[0] = (uint8_t)((most >> 56) & 0xFF);
-    bytes[1] = (uint8_t)((most >> 48) & 0xFF);
-    bytes[2] = (uint8_t)((most >> 40) & 0xFF);
-    bytes[3] = (uint8_t)((most >> 32) & 0xFF);
-    bytes[4] = (uint8_t)((most >> 24) & 0xFF);
-    bytes[5] = (uint8_t)((most >> 16) & 0xFF);
-    bytes[6] = (uint8_t)((most >> 8) & 0xFF);
-    bytes[7] = (uint8_t)(most & 0xFF);
-
-    uint64_t least = self.least;
-    bytes[8] = (uint8_t)((least >> 56) & 0xFF);
-    bytes[9] = (uint8_t)((least >> 48) & 0xFF);
-    bytes[10] = (uint8_t)((least >> 40) & 0xFF);
-    bytes[11] = (uint8_t)((least >> 32) & 0xFF);
-    bytes[12] = (uint8_t)((least >> 24) & 0xFF);
-    bytes[13] = (uint8_t)((least >> 16) & 0xFF);
-    bytes[14] = (uint8_t)((least >> 8) & 0xFF);
-    bytes[15] = (uint8_t)(least & 0xFF);
-
-    return;
-}
-
-void uuid4_to_string(uuid4_t self, char str[37])
-{
-    if (str == NULL)
-        call_nullarg();
-
-    uint64_t most = self.most, least = self.least;
-
-    uint64_t value = most;
+    uint64_t value = *(self + 0);
     uint64_t a = 0;
     for (uint64_t i = 0; i < 36; ++i)
     {
@@ -174,17 +115,25 @@ void uuid4_to_string(uuid4_t self, char str[37])
 
         if (a == 8)
         {
-            value = least;
+            value = *(self + 1);
             a = 0;
         }
 
         uint64_t j = (7 - a++) * 8;
         uint8_t byte = (uint8_t)((value >> j) & 0xFF);
 
-        sprintf(str + i, "%02X", byte);
-        i++;
+        sprintf(str + i++, "%02X", byte);
     }
 
     str[36] = '\0';
+    return str;
+}
+
+void uuid4_destroy(uuid4_t self)
+{
+    assert(self != NULL);
+
+    memory_dealloc(self);
+
     return;
 }
