@@ -14,10 +14,6 @@ static void constructor(void)
     return;
 }
 
-/*
- * most: a number that specifies the left half of the UUID
- * least: a number that specifies the right half of the UUID
- */
 static inline void _check(uint64_t most, uint64_t least)
 {
     assert(most != 0 || least != 0);
@@ -32,24 +28,21 @@ static inline void _check(uint64_t most, uint64_t least)
     return;
 }
 
-bool uuid4_is_nil(uuid4_t self)
+bool uuid4_compare(uuid4_t uuid1, uuid4_t uuid2)
 {
-    assert(self != NULL);
-    
-    _check(*(self + 0), *(self + 1));
+    _check(uuid1.most, uuid1.least);
+    _check(uuid2.most, uuid2.least);
 
-    return *(self + 0) == 0 && *(self + 1) == 0;
+    return uuid1.most == uuid2.most && 
+        uuid1.least == uuid2.least;
 }
 
-bool uuid4_compare(uuid4_t self, uuid4_t target_uuid)
+bool uuid4_is_nil(uuid4_t self)
 {
-    assert(self != NULL);
-    assert(target_uuid != NULL);
+    
+    _check(self.most, self.least);
 
-    _check(*(self + 0), *(self + 1));
-
-    return *(self + 0) == *(target_uuid + 0) && 
-        *(self + 1) == *(target_uuid + 1);
+    return self.most == 0 && self.least == 0;
 }
 
 // uint64_t uuid4_get_varint(uuid4_t self)
@@ -57,20 +50,11 @@ bool uuid4_compare(uuid4_t self, uuid4_t target_uuid)
 
 // }
 
-static inline uuid4_t _create(uint64_t most, uint64_t least)
-{
-    uuid4_t uuid = (uuid4_t)memory_alloc(sizeof(uint64_t) * 2);
-    *(uuid + 0) = most;
-    *(uuid + 1) = least;
-
-    return uuid;
-}
-
 uuid4_t uuid4_create(uint64_t most, uint64_t least)
 {
     _check(most, least);
 
-    return _create(most, least);
+    return (uuid4_t){most, least};
 }
 
 uuid4_t uuid4_generate(void)
@@ -83,27 +67,23 @@ uuid4_t uuid4_generate(void)
     least &= 0xBFFFFFFFFFFFFFFF;
     least |= 0x8000000000000000;
 
-    return _create(most, least);
+    return (uuid4_t){most, least};
 }
 
 uuid4_t uuid4_copy(uuid4_t self)
 {
-    assert(self != NULL);
+    _check(self.most, self.least);
 
-    _check(*(self + 0), *(self + 1));
-
-    return _create(*(self + 0), *(self + 1));
+    return (uuid4_t){self.most, self.least};
 }
 
 char *uuid4_to_string(uuid4_t self)
 {
-    assert(self != NULL);
-
-    _check(*(self + 0), *(self + 1));
+    _check(self.most, self.least);
 
     char *str = (char *)memory_alloc(37);
 
-    uint64_t value = *(self + 0);
+    uint64_t value = self.most;
     uint64_t a = 0;
     for (uint64_t i = 0; i < 36; ++i)
     {
@@ -115,7 +95,7 @@ char *uuid4_to_string(uuid4_t self)
 
         if (a == 8)
         {
-            value = *(self + 1);
+            value = self.least;
             a = 0;
         }
 
@@ -127,13 +107,4 @@ char *uuid4_to_string(uuid4_t self)
 
     str[36] = '\0';
     return str;
-}
-
-void uuid4_destroy(uuid4_t self)
-{
-    assert(self != NULL);
-
-    memory_dealloc(self);
-
-    return;
 }
