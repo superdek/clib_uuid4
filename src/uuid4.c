@@ -77,11 +77,63 @@ uuid4_t uuid4_copy(uuid4_t self)
     return (uuid4_t){self.most, self.least};
 }
 
-char *uuid4_to_string(uuid4_t self)
+uuid4_t uuid4_parse(uint8_t bytes[16])
 {
-    _check(self.most, self.least);
+    assert(bytes != NULL);
 
-    char *str = (char *)memory_alloc(37);
+    uint64_t most =
+        ((uint64_t)*(bytes + 0) << 56) |
+        ((uint64_t)*(bytes + 1) << 48) |
+        ((uint64_t)*(bytes + 2) << 40) |
+        ((uint64_t)*(bytes + 3) << 32) |
+        ((uint64_t)*(bytes + 4) << 24) |
+        ((uint64_t)*(bytes + 5) << 16) |
+        ((uint64_t)*(bytes + 6) << 8) |
+        ((uint64_t)*(bytes + 7) << 0);
+    uint64_t least =
+        ((uint64_t)*(bytes + 8) << 56) |
+        ((uint64_t)*(bytes + 9) << 48) |
+        ((uint64_t)*(bytes + 10) << 40) |
+        ((uint64_t)*(bytes + 11) << 32) |
+        ((uint64_t)*(bytes + 12) << 24) |
+        ((uint64_t)*(bytes + 13) << 16) |
+        ((uint64_t)*(bytes + 14) << 8) |
+        ((uint64_t)*(bytes + 15) << 0);
+
+    _check(most, least);
+
+    return (uuid4_t){most, least};
+}
+
+void uuid4_unparse(uuid4_t self, uint8_t bytes[16])
+{
+    assert(bytes != NULL);
+
+    bytes[0] = (uint8_t)((self.most >> 56) & 0xFF);
+    bytes[1] = (uint8_t)((self.most >> 48) & 0xFF);
+    bytes[2] = (uint8_t)((self.most >> 40) & 0xFF);
+    bytes[3] = (uint8_t)((self.most >> 32) & 0xFF);
+    bytes[4] = (uint8_t)((self.most >> 24) & 0xFF);
+    bytes[5] = (uint8_t)((self.most >> 16) & 0xFF);
+    bytes[6] = (uint8_t)((self.most >> 8) & 0xFF);
+    bytes[7] = (uint8_t)((self.most >> 0) & 0xFF);
+    bytes[8] = (uint8_t)((self.least >> 56) & 0xFF);
+    bytes[9] = (uint8_t)((self.least >> 48) & 0xFF);
+    bytes[10] = (uint8_t)((self.least >> 40) & 0xFF);
+    bytes[11] = (uint8_t)((self.least >> 32) & 0xFF);
+    bytes[12] = (uint8_t)((self.least >> 24) & 0xFF);
+    bytes[13] = (uint8_t)((self.least >> 16) & 0xFF);
+    bytes[14] = (uint8_t)((self.least >> 8) & 0xFF);
+    bytes[15] = (uint8_t)((self.least >> 0) & 0xFF);
+
+    return;
+}
+
+void uuid4_to_string(uuid4_t self, char str[37])
+{
+    assert(str != NULL);
+
+    _check(self.most, self.least);
 
     uint64_t value = self.most;
     uint64_t a = 0;
@@ -106,5 +158,5 @@ char *uuid4_to_string(uuid4_t self)
     }
 
     str[36] = '\0';
-    return str;
+    return;
 }
