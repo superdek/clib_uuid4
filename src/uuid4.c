@@ -157,6 +157,6 @@ void uuid4_to_string(uuid4_t self, char str[37])
         sprintf(str + i++, "%02X", byte);
     }
 
-    str[36] = '\0';
+    *(str + 36) = '\0';
     return;
 }
